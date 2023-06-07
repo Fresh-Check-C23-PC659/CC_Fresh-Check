@@ -1,7 +1,0 @@
-Flask
-gunicorn
-tensorflow
-numpy
-pillow
-Flask-HTTPAuth
-Flask-RESTful
