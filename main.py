@@ -13,6 +13,21 @@ from flask import Flask, request, jsonify
 
 model = keras.models.load_model("my_model.h5")
 
+class_labels = [
+    'fresh_apple',
+    'fresh_banana',
+    'fresh_bitter_gourd',
+    'fresh_capsicum',
+    'fresh_orange',
+    'fresh_tomato',
+    'stale_apple',
+    'stale_banana',
+    'stale_bitter_gourd',
+    'stale_capsicum',
+    'stale_orange',
+    'stale_tomato'
+]
+
 app = Flask(__name__)
 api = Api(app, prefix="/api/v1")
 auth = HTTPBasicAuth()
@@ -36,26 +51,14 @@ def transform_image(pillow_image):
     return data
 
 def predict(x):
-    class_labels = [
-        'fresh_apple',
-        'fresh_banana',
-        'fresh_bitter_gourd',
-        'fresh_capsicum',
-        'fresh_orange',
-        'fresh_tomato',
-        'stale_apple',
-        'stale_banana',
-        'stale_bitter_gourd',
-        'stale_capsicum',
-        'stale_orange',
-        'stale_tomato'
-    ]
-
     predictions = model.predict(x)
     pred0 = predictions[0]
     label0 = np.argmax(pred0)
     predicted_label = class_labels[label0]
-    return predicted_label
+    prediction_parts = predicted_label.split("_")
+    prediction = prediction_parts[0]
+    name = prediction_parts[1]
+    return prediction, name
 
 @auth.verify_password
 def verify(username, password):
@@ -76,8 +79,11 @@ class PrivateResource(Resource):
                 image_bytes = file.read()
                 pillow_img = Image.open(io.BytesIO(image_bytes)).convert('L')
                 tensor = transform_image(pillow_img)
-                prediction = predict(tensor)
-                data = {"prediction": (prediction)}
+                predicted_label, name_label = predict(tensor)
+                data = {
+                    "prediction": predicted_label,
+                    "name": name_label
+                }
                 auth_header = request.headers.get('Authorization')
                 if auth_header:
                     auth_type, auth_value = auth_header.split()
