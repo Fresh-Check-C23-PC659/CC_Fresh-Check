@@ -67,7 +67,7 @@ def verify(username, password):
     return USER_DATA.get(username) == password
 
 class PrivateResource(Resource):
-    @app.route("/", methods=["GET", "POST"])
+    @app.route("/predict", methods=["GET", "POST"])
     @auth.login_required
     def index():
         if request.method == "POST":
